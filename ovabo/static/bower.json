@@ -1,0 +1,23 @@
+{
+  "name": "OpenEBS2",
+  "version": "1.0.0",
+  "homepage": "https://github.com/StichtingOpenGeo/ovabo",
+  "authors": [
+    "Joel Haasnoot <joelhaasnoot@gmail.com>"
+  ],
+  "description": "GUI system for public transport products",
+  "moduleType": [
+    "globals"
+  ],
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "bootstrap": "~3.3.5",
+    "bower-bootswatch-paper": "paper-less#*"
+  }
+}

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}Verkooppartijen{% endblock %}
+
+{% block content %}
+    <h2>Verkooppartijen
+        <a href="{% url "seller_add" %}" class="btn btn-success pull-right"><i class="glyphicon glyphicon-plus"></i> Nieuw</a>
+    </h2>
+    <table class="table table-striped">
+        <tr>
+            <th>Naam</th>
+            <th class="text-center col-md-3">Telefoon</th>
+            <th class="text-center">Acties</th>
+        </tr>
+        {% for obj in object_list %}
+            <tr>
+                <td><em>{{ obj.name }}</em></td>
+                <td class="text-center">{{ obj.phone }}<br />{{ obj.url }}</td>
+                <td>
+                    <a href="{% url 'seller_edit' obj.pk %}" class="btn btn-primary btn-xs pull-right"><i class="glyphicon glyphicon-pencil"></i>&nbsp;Bewerk</a>
+                </td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="3" class="text-center">Geen verkooppartijen gevonden</td></tr>
+        {% endfor %}
+    </table>
+{% endblock %}

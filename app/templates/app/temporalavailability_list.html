@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}Kalenders{% endblock %}
+
+{% block content %}
+    <h2>Kalenders
+        <a href="{% url "calendar_add" %}" class="btn btn-success pull-right"><i class="glyphicon glyphicon-plus"></i> Nieuw</a>
+    </h2>
+    <table class="table table-striped">
+        <tr>
+            <th>Naam</th>
+            <th class="text-center col-md-2">Periodes</th>
+            <th class="text-center">Acties</th>
+        </tr>
+        {% for obj in object_list %}
+            <tr>
+                <td><em>{{ obj.description }}</em></td>
+                <td class="text-center">{{ obj.weekdays_set.count }}</td>
+                <td>
+                    <a href="{% url 'calendar_edit' obj.pk %}" class="btn btn-primary btn-xs pull-right"><i class="glyphicon glyphicon-pencil"></i>&nbsp;Bewerk</a>
+                    <form action="{% url 'calendar_clone' obj.id %}" method="post" >
+                        {% csrf_token %}
+                        <button class="btn btn-warning btn-xs pull-right" style="margin-right: 10px">
+                            <span class="glyphicon glyphicon-repeat"></span> {% trans "Kopieer" %}
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="3" class="text-center">Geen kalenders gevonden</td></tr>
+        {% endfor %}
+    </table>
+{% endblock %}

@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}Lijnen zonder prijsdata{% endblock %}
+
+{% block content %}
+    <h2>Lijnen zonder prijsdata</h2>
+    <strong>Aantal ontbrekende lijnen:</strong> {{ object_list|length }} <br/>
+    <strong>Aantal geladen lijnen:</strong> {{ total }} <br/>
+    <br />
+    <div class="alert alert-warning">
+        <i class="glyphicon glyphicon-alert"></i>&nbsp; Omdat treindata nog niet in deze database is geladen, wordt dit op dit moment niet getoond als ontbrekend.  Treinvervangend vervoer wordt wel getoond.
+    </div>
+
+    <div id="map" style="width: 100%; height: 400px;"></div>&nbsp;
+
+    {% regroup object_list by get_dataownercode_display as dataownercode_list %}
+
+    {% for dataowner in dataownercode_list %}
+    <h4>{{ dataowner.grouper }}</h4>
+    <table class="table table-striped">
+        <tr>
+            <th>Systeemlijnnummer</th>
+            <th class="text-center">Lijnnummer</th>
+            <th>Bestemming</th>
+        </tr>
+        {% for obj in dataowner.list %}
+            <tr>
+                <td>{{ obj.lineplanningnumber }}</td>
+                <td class="text-center">{{ obj.publiclinenumber }}</td>
+                <td>{{ obj.headsign }}</td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="3" class="text-center">Geen lijnen zonder prijsdata gevonden</td></tr>
+        {% endfor %}
+    </table>
+    {% endfor %}
+{% endblock %}
+
+{% block extra_css %}
+    <link href='https://api.mapbox.com/mapbox-gl-js/v0.20.1/mapbox-gl.css' rel='stylesheet' />
+{% endblock %}
+
+{% block extra_js %}
+<script src='https://api.mapbox.com/mapbox-gl-js/v0.20.1/mapbox-gl.js'></script>
+<script type="text/javascript">
+    $(function() {
+        mapboxgl.accessToken = 'pk.eyJ1Ijoiam9lbGhhYXNub290IiwiYSI6ImNpcHZrdGpwZjAwNWtod2tzN3hpazBxdWoifQ.XTeKb4bh230TknKWTQsK8A';
+        var map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/streets-v9',
+            center: [5.101711, 52.087901],
+            zoom: 7,
+            scrollZoom: true
+        });
+        var line_source, line_layer;
+        map.on('load', function() {
+            line_source = new mapboxgl.GeoJSONSource({
+                "data": {
+                    "type": "FeatureCollection",
+                    "features": []
+                }
+            });
+            map.addSource("lines", line_source);
+            line_layer = map.addLayer({
+                "id": "lines",
+                "type": "line",
+                "source": "lines",
+                "layout": {
+                    "line-join": "round",
+                    "line-cap": "round"
+                },
+                "paint": {
+                    "line-color": "#e74c3c",
+                    "line-width": 1
+                }
+            });
+            var popup = new mapboxgl.Popup({
+                closeButton: false,
+                closeOnClick: false
+            });
+            map.on('mousemove', function(e) {
+                var features = map.queryRenderedFeatures(e.point, { layers: ['lines'] });
+                // Change the cursor style as a UI indicator.
+                map.getCanvas().style.cursor = (features.length) ? 'pointer' : '';
+
+                if (!features.length) {
+                    popup.remove();
+                    return;
+                }
+
+                var feature = features[0];
+
+                var html = "Lijn "+feature.properties.publiclinenumber+" ("+feature.properties.lineplanningnumber+")";
+                popup.setLngLat(map.unproject(e.point))
+                        .setHTML(html)
+                        .addTo(map);
+            });
+            loadData(line_source);
+        });
+    })
+    function loadData(line_source) {
+        $.ajax("/data/lines/missing_prices.json", {
+            success: function (data, status, xhr) {
+                var features = []
+                $.each(data.object_list, function(index, value) {
+                    $.each(value.json_lines.features, function(i, v) {
+                        features.push(v);
+                    })
+                });
+                if (line_source) {
+                    line_source.setData({
+                        "type": "FeatureCollection",
+                        "features": features
+                    })
+                }
+            }
+        });
+
+    }
+</script>
+{% endblock %}

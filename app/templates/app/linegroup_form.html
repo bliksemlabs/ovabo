@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+{% load static i18n crispy_forms_tags %}
+
+{% block title %}{% if object.pk %}Specificeer lijnen{% else %}Lijnen toevoegen{% endif %}{% endblock %}
+
+{% block content %}
+    <h2>{% if object.pk %}Specificeer lijnen{% else %}Lijnen toevoegen{% endif %}</h2>
+
+    <form class="form-horizontal"
+          {% if object.pk %} action="{% url 'line_edit' object.pk %}"{% else %} action="{% url 'line_add' %}"{% endif %}
+          method="post">
+        {% crispy form form.helper %}
+
+        {% if object.id %}
+            {% if object.source != 10 %}<input type="submit" value="Opslaan" class="btn btn-primary pull-right" /> <br />{% endif %}
+            <div>
+                <ul class="nav nav-tabs" role="tablist">
+                    <li role="presentation"><a href="#standard" role="tab" data-toggle="tab">Standaard</a></li>
+                    <li role="presentation" class="active"><a href="#advanced" role="tab" data-toggle="tab">Geavanceerd</a></li>
+                </ul>
+
+                <div class="tab-content">
+                    <div role="tabpanel" class="tab-pane" id="standard">
+                        <br />
+                        <div class="alert alert-info">Hier kan je binnenkort lijnen kiezen op basis van een eindbestemming of lijnnummer.</div>
+                    </div>
+                    <div role="tabpanel" class="tab-pane active" id="advanced">
+                        <br />
+                        <div class="alert alert-info">Doormiddel van een of meer patronen kan je hier meerdere lijnen tegelijk kiezen. Bekijk rechts welke lijnen je hebt geselecteerd.
+                            Formaat voor het patroon is <code>vervoerdercode:lijnsysteemnummer</code>. Gebruik sterretjes (<code>*</code>) om aan te geven of patroon moet beginnen of eindigen met de zoekterm.
+                            Bijvoorbeeld <code>CXX:F*</code> of <code>ARR:*16</code>. Bekijk hier <a href="#codes" data-toggle="modal" data-target="#codes">de vervoerdercodes</a>.</div>
+                        {{ lines.management_form }}
+                        <div class="row">
+                            <div class="col-md-4" id="line_forms">
+                                {% for item_form in lines %}
+                                    <div class="inline">
+                                        {% crispy item_form item_form.helper %}
+                                    </div>
+                                {% endfor %}
+                                <button type="button" class="btn btn-success btn-xs" data-action="add-formset"><i class="glyphicon glyphicon-plus"></i>&nbsp;{% trans "Patroon toevoegen" %}</button>
+                                <a href="#codes" class="pull-right" data-toggle="modal" data-target="#codes">Bekijk vervoerdercodes</a>
+                                <div class="empty-form inline">
+                                    {% crispy lines.empty_form lines.empty_form.helper %}
+                                </div>
+                            </div>
+                            <div class="col-md-8" >
+                                <ul id="lines_tabs" class="nav nav-tabs navbar-right" role="tablist">
+                                    <li role="presentation"><a href="#tab_map" role="tab" data-toggle="tab">Kaart</a></li>
+                                    <li role="presentation"><a href="#tab_list" role="tab" data-toggle="tab">Lijst</a></li>
+                                </ul>
+                                <div class="clearfix"></div>
+
+                                <div class="tab-content">
+                                    <div role="tabpanel" class="tab-pane" id="tab_map">
+                                        <div id="map" style="width: 100%; height: 400px;"></div>&nbsp;
+                                        <div class="alert alert-warning">
+                                            Tijdelijk worden uitgesloten lijnen nog wel getoond op de kaart - deze feature wordt binnenkort toegevoegd.
+                                        </div>
+                                    </div>
+                                    <div role="tabpanel" class="tab-pane" id="tab_list">
+                                        <table class="table table-bordered table-condensed table-striped">
+                                            <tr>
+                                                <th>Lijnnummer</th>
+                                                <th>Bestemming</th>
+                                            </tr>
+                                            <tbody id="line_list">
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="modal fade" id="codes" tabindex="-1" role="dialog">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title">Vervoerderscodes</h4>
+                        </div>
+                        <div class="modal-body">
+                            <p>Gebruik de volgende vervoerdercodes:</p>
+                            <table class="table table-bordered">
+                                <tr>
+                                    <th>Code</th><th>Omschrijving</th>
+                                </tr>
+                                {% for code in dataownercode %}
+                                <tr>
+                                    <td>{{ code.0 }}</td><td>{{ code.1 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        {% if object.source != 10 %}<input type="submit" value="Opslaan" class="btn btn-primary pull-right" />{% endif %}
+        <br/>
+        <br/>
+        <br/>
+
+    </form>
+{% endblock %}
+
+{% block extra_css %}
+    <link href='https://api.mapbox.com/mapbox-gl-js/v0.20.1/mapbox-gl.css' rel='stylesheet' />
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'jquery.django-formset.js' %}"></script>
+    <script src='https://api.mapbox.com/mapbox-gl-js/v0.20.1/mapbox-gl.js'></script>
+    <script type="text/javascript">
+        $(function(){
+            {% if object.id %}
+                var formset = $('#line_forms').children('div.inline').djangoFormset({
+                    'deleteButtonText' : "{% trans "Verwijder" %}"
+                });
+                $('form').on('click', '[data-action=add-formset]', function(event) {
+                    var newForm = formset.addForm();
+                });
+                $('.inline').on('click', "[data-action=delete-formset]", function(event) {
+                    refreshMap(line_source);
+                });
+                $("#advanced").on('blur', "input[name$='-pattern']", function() {
+                    refreshMap(line_source);
+                });
+
+                mapboxgl.accessToken = 'pk.eyJ1Ijoiam9lbGhhYXNub290IiwiYSI6ImNpcHZrdGpwZjAwNWtod2tzN3hpazBxdWoifQ.XTeKb4bh230TknKWTQsK8A';
+                var map = new mapboxgl.Map({
+                    container: 'map',
+                    style: 'mapbox://styles/mapbox/streets-v9',
+                    center: [5.101711, 52.087901],
+                    zoom: 7,
+                    scrollZoom: true
+                });
+                var line_source, line_layer;
+                map.on('load', function() {
+                    line_source = new mapboxgl.GeoJSONSource({
+                                "data": {
+                                    "type": "FeatureCollection",
+                                    "features": []
+                                }
+                            });
+                    map.addSource("lines", line_source);
+                    line_layer = map.addLayer({
+                        "id": "lines",
+                        "type": "line",
+                        "source": "lines",
+                        "layout": {
+                            "line-join": "round",
+                            "line-cap": "round"
+                        },
+                        "paint": {
+                            "line-color": "#9c27b0",
+                            "line-width": 1
+                        }
+                    });
+                    refreshMap(line_source); /* Grab existing records */
+                });
+                // Create a popup, but don't add it to the map yet.
+                var popup = new mapboxgl.Popup({
+                    closeButton: false,
+                    closeOnClick: false
+                });
+
+                map.on('mousemove', function(e) {
+                    var features = map.queryRenderedFeatures(e.point, { layers: ['lines'] });
+                    // Change the cursor style as a UI indicator.
+                    map.getCanvas().style.cursor = (features.length) ? 'pointer' : '';
+
+                    if (!features.length) {
+                        popup.remove();
+                        return;
+                    }
+
+                    var feature = features[0];
+
+                    var html = "Lijn "+feature.properties.publiclinenumber+" ("+feature.properties.lineplanningnumber+")";
+                    popup.setLngLat(map.unproject(e.point))
+                            .setHTML(html)
+                            .addTo(map);
+                });
+
+                $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+                    console.log("Got tab shown");
+                    map.resize();
+                });
+                $('#lines_tabs a:first').tab('show');
+            {% endif %}
+        });
+        function refreshMap(line_source) {
+            var lines = "";
+            $("div.inline").each(function(i, v) {
+                var value = $(v).find("input[name$='-pattern']").val()
+                if (lines != "") {
+                    lines += ","
+                }
+                if ($(v).find("select[name$='-type']").val() == 2) {
+                    value = "!" + value;
+                }
+                if (value != "") {
+                    lines += value;
+                }
+            });
+            $.ajax("/data/lines/advanced?search="+lines, {
+                success: function (data, status, xhr) {
+                    var features = []
+                    /* TODO: We should think about doing this serverside */
+                    $.each(data.object_list, function(index, value) {
+                        $.each(value.json_lines.features, function(i, v) {
+                            features.push(v);
+                        })
+                    });
+                    if (line_source) {
+                        line_source.setData({
+                            "type": "FeatureCollection",
+                            "features": features
+                        })
+                    }
+                }
+            });
+        }
+    </script>
+{% endblock %}

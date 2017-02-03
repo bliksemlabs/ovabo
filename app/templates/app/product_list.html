@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Product{% endblock %}
+
+{% block content %}
+    <h2>Product
+        <a href="{% url "product_add" %}" class="btn btn-success pull-right"><i class="glyphicon glyphicon-plus"></i> Nieuw</a>
+    </h2>
+    <table class="table table-striped">
+        <tr>
+            <th>Naam</th>
+            <th class="text-center">Prijs</th>
+            <th class="text-center">Kortingen</th>
+            <th class="text-right">Acties</th>
+        </tr>
+        {% for abo in object_list %}
+            <tr>
+                <td><em>{{ abo.name }}</em>
+                    <span class="pull-right">
+                        {% if abo.incomplete %}<i title="Nog niet compleet" class="glyphicon glyphicon-exclamation-sign text-warning"></i>{% endif %}
+                        {% if abo.validated %}<i title="Gevalideerd" class="glyphicon glyphicon-check text-success"></i>{% endif %}
+                    </span>
+                </td>
+                <td class="text-center"><small>
+                    {% for price in abo.prices.all %}
+                        {{ price.get_duration_display }}: &euro; {{ price.price }}<br/>
+                    {% endfor %}
+                    </small>
+                </td>
+                <td class="text-center">{{ abo.productreduction_set.count }}</td>
+                <td>
+                    <a href="{% url 'product_edit' abo.pk %}" class="btn btn-primary btn-xs pull-right"><i class="glyphicon glyphicon-pencil"></i>&nbsp;Bewerk</a>
+                    <form action="{% url 'product_clone' abo.id %}" method="post" >
+                        {% csrf_token %}
+                        <button class="btn btn-warning btn-xs pull-right" style="margin-right: 10px">
+                            <span class="glyphicon glyphicon-repeat"></span> Kopieer
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="5" class="text-center">Geen producten gevonden</td></tr>
+        {% endfor %}
+    </table>
+{% endblock %}

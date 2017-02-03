@@ -1,0 +1,291 @@
+{% extends "base.html" %}
+{% load static i18n crispy_forms_tags %}
+
+{% block title %}{% if not object.id %}Product toevoegen{% else %}{% endif %}Specificeer product{% endblock %}
+
+{% block content %}
+    {% if not object.id %} {% comment %} Add {% endcomment %}
+        <h2>Product toevoegen</h2>
+        {% crispy form form.helper %}
+    {% else %}
+        <h2>Specificeer product</h2>
+        <form class="form-horizontal" action="{% url 'product_edit' object.pk %}" method="post">
+            {% crispy form form.helper %}
+            <input type="submit" value="Opslaan" class="btn btn-primary pull-right" />
+
+            {% if prices.total_error_count > 0 or product_reductions.total_error_count > 0 or bearers.total_error_count > 0 or availabilities.total_error_count > 0 %}
+                <br />
+                <div class="alert alert-danger">
+                    Er zijn fouten gevonden in de onderstaande formulieren. Controlleer de tabs met een rood uitroepteken.
+                </div>
+            {% endif %}
+            <div>
+                <ul class="nav nav-tabs" role="tablist">
+                    <li role="presentation" class="active"><a href="#reductions" role="tab" data-toggle="tab">
+                        Kortingen{% if product_reductions.total_error_count > 0 %}&nbsp;<i class="glyphicon glyphicon-alert" style="color: #e51c23"></i>{% endif %}
+                    </a></li>
+                    <li role="presentation"><a href="#bearers" role="tab" data-toggle="tab">
+                        Dragers{% if bearers.total_error_count > 0 %}&nbsp;<i class="glyphicon glyphicon-alert" style="color: #e51c23"></i>{% endif %}
+                    </a></li>
+                    <li role="presentation"><a href="#prices" role="tab" data-toggle="tab">
+                        Prijzen{% if prices.total_error_count > 0 %}&nbsp;<i class="glyphicon glyphicon-alert" style="color: #e51c23"></i>{% endif %}
+                    </a></li>
+                    <li role="presentation"><a href="#availabilities" role="tab" data-toggle="tab">
+                        Beschikbaarheid{% if availabilities.total_error_count > 0 %}&nbsp;<i class="glyphicon glyphicon-alert" style="color: #e51c23"></i>{% endif %}
+                    </a></li>
+                    <li role="presentation"><a href="#location_tab" role="tab" data-toggle="tab">
+                        Verkooplocaties{% if sellers.total_error_count > 0 or locations.total_error_count > 0 %}&nbsp;<i class="glyphicon glyphicon-alert" style="color: #e51c23"></i>{% endif %}
+                    </a></li>
+                    <li role="presentation"><a href="#validities" role="tab" data-toggle="tab">
+                        Geldigheid
+                        {% if validities.total_error_count > 0 or validity_rules.total_error_count > 0 or validity_periods.total_error_count > 0 %}
+                            &nbsp;<i class="glyphicon glyphicon-alert" style="color: #e51c23"></i>
+                        {% endif %}
+                    </a></li>
+                </ul>
+
+                <div class="tab-content">
+                    <div role="tabpanel" class="tab-pane active" id="reductions">
+                        {{ product_reductions.management_form }}
+                        <br />
+                        {% for item_form in product_reductions %}
+                            <div class="inline">
+                                {% crispy item_form item_form.helper %}
+                            </div>
+                        {% endfor %}
+                        <div class="empty-form inline">
+                            {% crispy product_reductions.empty_form product_reductions.empty_form.helper %}
+                        </div>
+                        <button type="button" class="btn btn-success btn-xs" data-action="add-reduction-formset"><i class="glyphicon glyphicon-plus"></i>&nbsp;{% trans "Korting toevoegen" %}</button>
+                    </div>
+                    <div role="tabpanel" class="tab-pane" id="bearers">
+                        {{ bearers.management_form }}
+                        <br />
+                        {% for item_form in bearers %}
+                            <div class="inline">
+                                {% crispy item_form item_form.helper %}
+                            </div>
+                        {% endfor %}
+                        <div class="empty-form inline">
+                            {% crispy bearers.empty_form bearers.empty_form.helper %}
+                        </div>
+                        <button type="button" class="btn btn-success btn-xs" data-action="add-bearer-formset"><i class="glyphicon glyphicon-plus"></i>&nbsp;{% trans "Drager toevoegen" %}</button>
+                    </div>
+                    <div role="tabpanel" class="tab-pane" id="prices">
+                        {{ prices.management_form }}
+                        <br />
+                        {% for item_form in prices %}
+                            <div class="inline">
+                                {% crispy item_form item_form.helper %}
+                            </div>
+                        {% endfor %}
+                        <div class="empty-form inline">
+                            {% crispy prices.empty_form prices.empty_form.helper %}
+                        </div>
+                        <button type="button" class="btn btn-success btn-xs" data-action="add-price-formset"><i class="glyphicon glyphicon-plus"></i>&nbsp;{% trans "Prijs toevoegen" %}</button>
+                    </div>
+                    <div role="tabpanel" class="tab-pane" id="availabilities">
+                        {{ availabilities.management_form }}
+                        <br />
+                        {% for item_form in availabilities %}
+                            <div class="inline">
+                                {% crispy item_form item_form.helper %}
+                            </div>
+                        {% endfor %}
+                        <div class="empty-form inline">
+                            {% crispy availabilities.empty_form availabilities.empty_form.helper %}
+                        </div>
+                        <button type="button" class="btn btn-success btn-xs" data-action="add-availabilities-formset"><i class="glyphicon glyphicon-plus"></i>&nbsp;{% trans "Beschikbaarheid toevoegen" %}</button>
+                    </div>
+                    <div role="tabpanel" class="tab-pane" id="location_tab">
+                        <h3>Verkooppartijen</h3>
+                        <div id="sellers">
+                            {{ sellers.management_form }}
+                            <br />
+                            {% for item_form in sellers %}
+                                <div class="inline">
+                                    {% crispy item_form item_form.helper %}
+                                </div>
+                            {% endfor %}
+                            <div class="empty-form inline">
+                                {% crispy sellers.empty_form sellers.empty_form.helper %}
+                            </div>
+                            <button type="button" class="btn btn-success btn-xs" data-action="add-seller-formset"><i class="glyphicon glyphicon-plus"></i>&nbsp;{% trans "Verkooppartij toevoegen" %}</button>
+                        </div>
+
+                        <h3>Locaties</h3>
+                        <div id="locations">
+                            {{ locations.management_form }}
+                            <br />
+                            {% for item_form in locations %}
+                                <div class="inline">
+                                    {% crispy item_form item_form.helper %}
+                                </div>
+                            {% endfor %}
+                            <div class="empty-form inline">
+                                {% crispy locations.empty_form locations.empty_form.helper %}
+                            </div>
+                            <button type="button" class="btn btn-success btn-xs" data-action="add-locations-formset"><i class="glyphicon glyphicon-plus"></i>&nbsp;{% trans "Verkooplocatie toevoegen" %}</button>
+                        </div>
+                    </div>
+                    <div role="tabpanel" class="tab-pane" id="validities">
+                        {{ validities.management_form }}
+                        <br />
+                        {% for item_form in validities %}
+                            <div class="inline">
+                                {% crispy item_form item_form.helper %}
+                            </div>
+                        {% endfor %}
+                        <div class="empty-form inline">
+                            {% crispy validities.empty_form validities.empty_form.helper %}
+                        </div>
+                        <button type="button" class="btn btn-success btn-xs" data-action="add-validities-formset"><i class="glyphicon glyphicon-plus"></i>&nbsp;{% trans "Geldigheid toevoegen" %}</button>
+
+                        <h3>Geldigheidsperiode</h3>
+                        <div id="validity_periods">
+                            {{ validity_periods.management_form }}
+                            <br />
+                            {% for item_form in validity_periods %}
+                                <div class="inline">
+                                    {% crispy item_form item_form.helper %}
+                                </div>
+                            {% endfor %}
+                            <div class="empty-form inline">
+                                {% crispy validity_periods.empty_form validities.empty_form.helper %}
+                            </div>
+                            <button type="button" class="btn btn-success btn-xs" data-action="add-validity_period-formset"><i class="glyphicon glyphicon-plus"></i>&nbsp;{% trans "Periode toevoegen" %}</button>
+                        </div>
+
+                        <h3>Geldigheidsregels</h3>
+                        <div id="validity_rules">
+                            {{ validity_rules.management_form }}
+                            <br />
+                            {% for item_form in validity_rules %}
+                                <div class="inline">
+                                    {% crispy item_form item_form.helper %}
+                                </div>
+                            {% endfor %}
+                            <div class="empty-form inline">
+                                {% crispy validity_rules.empty_form validities.empty_form.helper %}
+                            </div>
+                            <button type="button" class="btn btn-success btn-xs" data-action="add-validity_rule-formset"><i class="glyphicon glyphicon-plus"></i>&nbsp;{% trans "Regel toevoegen" %}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <br />
+            <br />
+        </form>
+    {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'jquery.django-formset.js' %}"></script>
+    <script type="text/javascript">
+        $(function(){
+            {% if object.id %}
+            var formset_reductions = $('#reductions').children('div.inline').djangoFormset({
+                'deleteButtonText' : "{% trans "Verwijder" %}"
+            });
+            $('#reductions').on('click', '[data-action=add-reduction-formset]', function(event) {
+                var newForm = formset_reductions.addForm();
+            });
+            var formset_bearers = $('#bearers').children('div.inline').djangoFormset({
+                'deleteButtonText' : "{% trans "Verwijder" %}"
+            });
+            $('#bearers').on('click', '[data-action=add-bearer-formset]', function(event) {
+                var newForm = formset_bearers.addForm();
+            });
+            var formset_prices = $('#prices').children('div.inline').djangoFormset({
+                'deleteButtonText' : "{% trans "Verwijder" %}"
+            });
+            $('#prices').on('click', '[data-action=add-price-formset]', function(event) {
+                var newForm = formset_prices.addForm();
+            });
+            var formset_availabilties = $('#availabilities').children('div.inline').djangoFormset({
+                'deleteButtonText' : "{% trans "Verwijder" %}"
+            });
+            $('#availabilities').on('click', '[data-action=add-availabilities-formset]', function(event) {
+                var newForm = formset_availabilties.addForm();
+            });
+            var formset_validities = $('#validities').children('div.inline').djangoFormset({
+                'deleteButtonText' : "{% trans "Verwijder" %}"
+            });
+            $('#locations').on('click', '[data-action=add-locations-formset]', function(event) {
+                var newForm = formset_locations.addForm();
+            });
+            var formset_locations = $('#locations').children('div.inline').djangoFormset({
+                'deleteButtonText' : "{% trans "Verwijder" %}"
+            });
+            $('#validities').on('click', '[data-action=add-validities-formset]', function(event) {
+                var newForm = formset_validities.addForm();
+            });
+            var formset_valdity_periods = $('#validity_periods').children('div.inline').djangoFormset({
+                'deleteButtonText' : "{% trans "Verwijder" %}"
+            });
+            $('#validity_periods').on('click', '[data-action=add-validity_period-formset]', function(event) {
+                var newForm = formset_valdity_periods.addForm();
+            });
+            var formset_validity_rules = $('#validity_rules').children('div.inline').djangoFormset({
+                'deleteButtonText' : "{% trans "Verwijder" %}"
+            });
+            $('#validity_rules').on('click', '[data-action=add-validity_rule-formset]', function(event) {
+                var newForm = formset_validity_rules.addForm();
+            });
+            var formset_sellers = $('#sellers').children('div.inline').djangoFormset({
+                'deleteButtonText' : "{% trans "Verwijder" %}"
+            });
+            $('#sellers').on('click', '[data-action=add-seller-formset]', function(event) {
+                var newForm = formset_sellers.addForm();
+            });
+
+                /* TODO: Make this generic */
+            $('form').on('change', 'select[name$="-linegroup"]', function(event) {
+                if ($(this).val() != "") {
+                    var button = $(this).parents('.input-group').children().find('.btn_edit_linegroup')
+                    button.html('<i class="glyphicon glyphicon-pencil"></i>&nbsp;Bewerk')
+                    button.removeClass('btn-success').addClass('btn-primary')
+                } else {
+                    button.html('<i class="glyphicon glyphicon-plus"></i>&nbsp;Toevoegen')
+                    button.removeClass('btn-primary').addClass('btn-success')
+                }
+            });
+            $('form').on('change', 'select[name$="-temporalavailability"]', function(event) {
+                if ($(this).val() != "") {
+                    var button = $(this).parents('.input-group').children().find('.btn_edit_temporalavailability')
+                    button.html('<i class="glyphicon glyphicon-pencil"></i>&nbsp;Bewerk')
+                    button.removeClass('btn-success').addClass('btn-primary')
+                } else {
+                    button.html('<i class="glyphicon glyphicon-plus"></i>&nbsp;Toevoegen')
+                    button.removeClass('btn-primary').addClass('btn-success')
+                }
+            });
+            <!-- TODO: Fix this -->
+            $('form').on('change', 'select[name$="-rule"]', function(event) {
+                var element = "#" + $(this).attr('id').replace("rule", "value");
+                if ($(this).val() != "30") {
+                    $(element).hide()
+                } else {
+                    $(element).show()
+                }
+            });
+            $('form').on('click', '.btn_edit_linegroup', function() {
+                var base_url = "{% url "line_edit" 999 %}";
+                var value =  $(this).parents('.input-group').children('select').val()
+                if (value != "") {
+                    location.href = base_url.replace("999", value)
+                } else {
+                    location.href = "{% url "line_add" %}";
+                }
+            });
+            $('form').on('click', '.btn_edit_temporalavailability', function() {
+                var base_url = "{% url "calendar_edit" 999 %}";
+                var value =  $(this).parents('.input-group').children('select').val()
+                if (value != "") {
+                    location.href = base_url.replace("999", value)
+                }
+            });
+            {% endif %}
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,80 @@
+{% load i18n staticfiles %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title> {% trans "OVAbo" %} | {% block title %} {% endblock %}</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="{% static 'bower_components/bootstrap/dist/css/bootstrap-flatly.min.css' %}" media="screen">
+{#    <link rel="stylesheet" href="{% static 'bower_components/bootstrap/dist/css/bootstrap.min.css' %}" media="screen">#}
+{#    <link rel="stylesheet" href="{% static 'bower_components/bower-bootswatch-paper/css/paper.min.css' %}">#}
+    <link rel="stylesheet" href="{% static 'site.css' %}">
+{#    <link rel="stylesheet" href="{% static 'css/site.css' %}">#}
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+        <script src="{% static 'bower_components/html5shiv/dist/html5shiv.min.js' %}"></script>
+        <script src="{% static 'bower_components/respond/dest/respond.min.js' %}"></script>
+    <![endif]-->
+    {% block extra_css %} {% endblock %}
+    <link href='//fonts.googleapis.com/css?family=Roboto:400,400italic' rel='stylesheet' type='text/css'>
+
+</head>
+<body>
+    <nav class="navbar navbar-default" role="navigation">
+      <!-- Brand and toggle get grouped for better mobile display -->
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+          <span class="sr-only">Toggle navigation</span>
+        </button>
+        <a class="navbar-brand" href="#">{% trans "OVAbo" %}</a>
+      </div>
+
+    <div class="collapse navbar-collapse navbar-ex1-collapse">
+        <ul class="nav navbar-nav">
+            <li>
+              <a href="{% url "product_list" %}">
+                <i class="glyphicon glyphicon-tags"></i>&nbsp;&nbsp;{% trans "Producten" %}
+              </a>
+            </li>
+            <li>
+                <a href="{% url "line_list" %}">
+                    <span class="glyphicon glyphicon-sort"></span>&nbsp;&nbsp;{% trans "Lijnen" %}
+                </a>
+            </li>
+            <li>
+                <a href="{% url "calendar_list" %}">
+                    <span class="glyphicon glyphicon-calendar"></span>&nbsp;&nbsp;{% trans "Kalenders" %}
+                </a>
+            </li>
+            <li>
+                <a href="{% url "agegroup_list" %}">
+                    <span class="glyphicon glyphicon-user"></span>&nbsp;&nbsp;{% trans "Leeftijdsgroepen" %}
+                </a>
+            </li>
+            <li>
+                <a href="{% url "seller_list" %}">
+                    <span class="glyphicon glyphicon-home"></span>&nbsp;&nbsp;{% trans "Verkooppartijen" %}
+                </a>
+            </li>
+        </ul>
+        <ul class="nav navbar-nav navbar-right">
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Overig <span class="caret"></span></a>
+                <ul class="dropdown-menu">
+                    <li><a href="{% url "data_report_missing-price" %}"><span class="glyphicon glyphicon-list"></span>&nbsp;Rapport ontbrekende prijzen</a></li>
+                </ul>
+            </li>
+        </ul>
+      </div>
+    </nav>
+    {% block content_full_page %}
+        <div class="container">
+            {% block content %} {% endblock %}
+        </div>
+    {% endblock %}
+    <script src="{% static 'bower_components/jquery/dist/jquery.min.js' %}"></script>
+    <script src="{% static 'bower_components/bootstrap/dist/js/bootstrap.min.js' %}"></script>
+    {% block extra_js %} {% endblock %}
+</body>
+</html>

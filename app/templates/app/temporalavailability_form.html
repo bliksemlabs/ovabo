@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% load static i18n crispy_forms_tags %}
+
+{% block title %}{% if not object.id %}Kalender toevoegen{% else %}Specificeer kalender{% endif %}{% endblock %}
+
+{% block content %}
+    {% if not object.id %} {% comment %} Add {% endcomment %}
+        <h2>Kalender toevoegen</h2>
+        <form class="form-horizontal" action="{% url 'calendar_add' %}" method="post">
+            {% crispy form form.helper %}
+            <input type="submit" value="Toevoegen" class="btn btn-primary pull-right" />
+        </form>
+    {% else %}
+        <h2>Specificeer kalender</h2>
+        <form class="form-horizontal" action="{% url 'calendar_edit' object.pk %}" method="post">
+            {% crispy form form.helper %}
+            <input type="submit" value="Opslaan" class="btn btn-primary pull-right" />
+
+            {{ weekdays.management_form }}
+            <br />
+            <h5>Periodes</h5>
+            {% for item_form in weekdays %}
+                <div class="inline">
+                    {% crispy item_form item_form.helper %}
+                </div>
+            {% endfor %}
+            <button type="button" class="btn btn-success btn-xs" data-action="add-formset"><i class="glyphicon glyphicon-plus"></i>&nbsp;{% trans "Korting toevoegen" %}</button>
+            <div class="empty-form inline">
+                {% crispy weekdays.empty_form weekdays.empty_form.helper %}
+            </div>
+
+        </form>
+    {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'jquery.django-formset.js' %}"></script>
+    <script type="text/javascript">
+        $(function(){
+            {% if object.id %}
+            var formset = $('form').children('div.inline').djangoFormset({
+                'deleteButtonText' : "{% trans "Delete" %}"
+            });
+            $('form').on('click', '[data-action=add-formset]', function(event) {
+                var newForm = formset.addForm();
+            });
+            {% endif %}
+        });
+    </script>
+{% endblock %}

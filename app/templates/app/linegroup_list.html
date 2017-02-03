@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}Lijnen{% endblock %}
+
+{% block content %}
+    <h2>Lijnen
+        <a href="{% url "line_add" %}" class="btn btn-success pull-right"><i class="glyphicon glyphicon-plus"></i> Nieuw</a>
+    </h2>
+    <table class="table table-striped">
+        <tr>
+            <th>Naam</th>
+            <th class="text-center col-md-2">Lijnen/patronen</th>
+            <th class="text-center">Acties</th>
+        </tr>
+        {% for obj in object_list %}
+            <tr>
+                <td class="col-md-6">
+                    <em>{% if obj.source == 10 %}<i class="glyphicon glyphicon-import"></i>&nbsp;{% endif %}
+                        {{ obj.description }}</em>
+                    <span class="pull-right">
+                        {% if obj.incomplete %}<i title="Nog niet compleet" class="glyphicon glyphicon-exclamation-sign text-warning"></i>{% endif %}
+                        {% if obj.validated %}<i title="Gevalideerd" class="glyphicon glyphicon-check text-success"></i>{% endif %}
+                    </span>
+                </td>
+                <td class="text-center">{{ obj.line_set.count }}</td>
+                <td class="col-md-4">
+                    {% if obj.source != 10 %}
+                        <a href="{% url 'line_edit' obj.pk %}" class="btn btn-primary btn-xs pull-right"><i class="glyphicon glyphicon-pencil"></i>&nbsp;Bewerk</a>
+                    {% else %}
+                        <a href="{% url 'line_edit' obj.pk %}" class="btn btn-succes btn-xs pull-right"><i class="glyphicon glyphicon-zoom-in"></i>&nbsp;Bekijk</a>
+                    {% endif %}
+                    <form action="{% url 'line_clone' obj.id %}" method="post" >
+                        {% csrf_token %}
+                        <button class="btn btn-warning btn-xs pull-right" style="margin-right: 10px">
+                            <span class="glyphicon glyphicon-repeat"></span> {% trans "Kopieer" %}
+                        </button>
+                    </form>
+
+                </td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="3" class="text-center">Geen lijnen gevonden</td></tr>
+        {% endfor %}
+    </table>
+{% endblock %}
